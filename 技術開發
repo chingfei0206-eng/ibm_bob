@@ -1,0 +1,237 @@
+# 高雄旅遊 AI 行程規劃 MVP — 計畫文件
+
+## Top-Level Overview
+
+打造一個高雄市旅遊客製化行程規劃網站的 MVP，使用者透過簡單的表單輸入旅遊條件，由 GPT AI 產生客製化行程，並整合大眾交通 Mock 時刻表與 Google Maps 導航連結，讓整個行程可以實際展示給評審或投資人。
+
+**技術架構：**
+- 前端框架：Next.js (React)
+- UI：Tailwind CSS + shadcn/ui
+- AI 行程：OpenAI GPT-4o API
+- 地圖導航：Google Maps URL Scheme（點擊跳轉）
+- 交通時刻：Mock JSON 資料（預留真實 API 介面）
+- 部署：Vercel
+
+**非目標（MVP 不做）：**
+- 真實交通 API 串接
+- 使用者登入 / 儲存行程
+- 付費功能
+- 後台管理介面
+
+---
+
+## 子任務列表
+
+---
+
+### 子任務 1 — 專案初始化與基礎架構建置
+
+- **Status:** `[ ] pending`
+
+**Intent**
+建立 Next.js 專案骨架，設定 Tailwind CSS、shadcn/ui，確保開發環境可正常運行，為後續功能開發打好基礎。
+
+**Expected Outcomes**
+- 專案可在本地 `npm run dev` 啟動
+- Tailwind CSS 樣式生效
+- shadcn/ui 元件可正常引用
+- 專案可部署至 Vercel
+
+**Todo List**
+1. 使用 `create-next-app` 建立專案（TypeScript、App Router）
+2. 安裝並設定 Tailwind CSS
+3. 安裝並初始化 shadcn/ui
+4. 建立基本資料夾結構：`/app`、`/components`、`/lib`、`/data`
+5. 設定環境變數檔案 `.env.local`（預留 `OPENAI_API_KEY`）
+6. 部署至 Vercel 確認 CI/CD 流程正常
+
+**Relevant Context**
+- 無現有程式碼，全新專案
+
+---
+
+### 子任務 2 — 使用者輸入表單介面
+
+- **Status:** `[ ] pending`
+
+**Intent**
+打造使用者填寫旅遊條件的表單頁面，收集所有規劃行程所需的輸入資訊，UI 需清晰易用，適合行動裝置。
+
+**Expected Outcomes**
+- 表單包含所有必要欄位並可正常提交
+- 表單在手機與桌機皆有良好顯示
+- 提交後資料可被正確讀取並傳遞給下一步
+
+**Todo List**
+1. 建立首頁 `/app/page.tsx` 作為表單入口
+2. 實作「喜好主題」多選元件（港灣文青、歷史文化、美食探索、親子樂園、自然生態）
+3. 實作「人數」輸入（大人 / 小孩各幾位）
+4. 實作「交通方式」選擇（大眾運輸、開車、步行、混合）
+5. 實作「天數」選擇（1–7 天）
+6. 實作「備註」自由文字輸入（例如：素食、無障礙）
+7. 加入表單驗證（必填欄位提示）
+8. 「開始規劃」送出按鈕，送出後導向行程結果頁
+
+**Relevant Context**
+- 使用 shadcn/ui 的 `Select`、`Checkbox`、`Input`、`Button` 元件
+- 表單狀態管理使用 React `useState` 或 `react-hook-form`
+
+---
+
+### 子任務 3 — OpenAI GPT 行程產生 API
+
+- **Status:** `[ ] pending`
+
+**Intent**
+建立後端 API Route，接收使用者輸入的條件，組成 Prompt 呼叫 OpenAI GPT-4o，產生結構化的高雄旅遊行程 JSON。
+
+**Expected Outcomes**
+- `/api/generate-itinerary` API Route 可正常接收請求並回傳行程資料
+- 回傳格式為結構化 JSON（包含每日行程、景點名稱、地點、交通建議）
+- Prompt 設計能產生符合條件的高雄在地行程
+
+**Todo List**
+1. 安裝 `openai` npm 套件
+2. 建立 `/app/api/generate-itinerary/route.ts`
+3. 設計 Prompt 模板，將使用者輸入（喜好主題、人數、交通、天數、備註）組入 Prompt
+4. 定義回傳 JSON Schema，包含：
+   - 每日（day）
+   - 每個景點（name, address, description, lat, lng, duration）
+   - 每段交通（from, to, transport_type, duration）
+5. 呼叫 GPT-4o 並解析回傳內容為 JSON
+6. 加入基本錯誤處理（API key 缺失、GPT 回應格式異常）
+
+**Relevant Context**
+- 環境變數：`OPENAI_API_KEY`（存於 `.env.local`）
+- 回傳 JSON 結構需與子任務 4、5 對齊
+
+---
+
+### 子任務 4 — 行程結果頁面顯示
+
+- **Status:** `[ ] pending`
+
+**Intent**
+將 GPT 產生的行程以清晰的視覺方式呈現，讓使用者可以一眼看懂每天的行程安排，並看到每個景點的基本資訊。
+
+**Expected Outcomes**
+- 行程結果頁 `/app/itinerary/page.tsx` 可正常顯示
+- 依天數分頁或分區塊顯示行程
+- 每個景點顯示：名稱、描述、預估停留時間
+- 顯示 loading 狀態（等待 GPT 回應時）
+- 行動裝置顯示正常
+
+**Todo List**
+1. 建立 `/app/itinerary/page.tsx` 行程結果頁
+2. 呼叫 `/api/generate-itinerary` 並處理 loading / error 狀態
+3. 實作每日行程卡片元件 `DayCard`
+4. 實作景點卡片元件 `SpotCard`（名稱、描述、預估停留時間）
+5. 實作交通段落元件 `TransitSegment`（交通方式 icon + 時間）
+6. 加入 loading skeleton 動畫提升體驗
+
+**Relevant Context**
+- 元件放於 `/components/itinerary/`
+- 資料結構來自子任務 3 定義的 JSON Schema
+
+---
+
+### 子任務 5 — Mock 大眾交通時刻表整合
+
+- **Status:** `[ ] pending`
+
+**Intent**
+在行程表中加入高雄大眾交通的 Mock 時刻資料，讓每段景點間的移動有具體的班次時間可以參考，展示時更真實可信。
+
+**Expected Outcomes**
+- 行程中每段交通顯示建議搭乘時間與班次
+- Mock 資料結構預留真實 API 介面，未來可直接替換
+- 支援高雄 MRT、輕軌、公車三種交通類型
+
+**Todo List**
+1. 在 `/data/mock-transit.ts` 建立 Mock 時刻表資料結構
+2. 定義資料介面 `TransitSchedule`（路線、起站、訖站、班次時間）
+3. 建立查詢函式 `getTransitSchedule(from, to, type)` 回傳建議班次
+4. 在 `TransitSegment` 元件中整合查詢函式，顯示建議搭乘時刻
+5. Mock 資料涵蓋高雄常見景點路線（如：美麗島、鹽埕埔、西子灣、旗津、駁二）
+
+**Relevant Context**
+- 檔案位置：`/data/mock-transit.ts`
+- 與子任務 4 的 `TransitSegment` 元件整合
+
+---
+
+### 子任務 6 — Google Maps 導航功能整合
+
+- **Status:** `[ ] pending`
+
+**Intent**
+在每個景點與每段交通旁加入 Google Maps 導航連結，使用者點擊後直接跳轉至 Google Maps 進行導航，零成本實作且 Demo 效果佳。
+
+**Expected Outcomes**
+- 每個景點卡片有「導航」按鈕
+- 點擊後以新分頁開啟 Google Maps，目的地預填正確
+- 支援景點對景點的路線導航連結
+- 行動裝置點擊可觸發 Google Maps App
+
+**Todo List**
+1. 建立工具函式 `buildGoogleMapsUrl(destination, origin?)` 於 `/lib/maps.ts`
+2. 景點僅有目的地時，產生 `https://www.google.com/maps/search/?api=1&query=<地點名稱>`
+3. 有起訖點時，產生 `https://www.google.com/maps/dir/?api=1&origin=<起點>&destination=<終點>&travelmode=transit`
+4. 在 `SpotCard` 元件加入「📍 導航」按鈕
+5. 在 `TransitSegment` 元件加入「🗺️ 查看路線」按鈕
+
+**Relevant Context**
+- 工具函式位置：`/lib/maps.ts`
+- 整合至子任務 4 的 `SpotCard` 與 `TransitSegment` 元件
+
+---
+
+### 子任務 7 — 整體 UI 美化與 Demo 準備
+
+- **Status:** `[ ] pending`
+
+**Intent**
+整合所有功能後，進行整體視覺調整，確保 MVP 在 Demo 時呈現專業、一致的高雄在地風格，適合評審展示。
+
+**Expected Outcomes**
+- 整體配色與高雄城市意象一致（海洋藍、港灣色調）
+- 首頁有吸引人的 Hero 區塊
+- 行動裝置體驗流暢
+- 部署至 Vercel 的正式網址可正常訪問
+
+**Todo List**
+1. 設計首頁 Hero 區塊（標題、副標、背景圖）
+2. 統一全站配色（Tailwind 自訂色彩 token）
+3. 加入高雄相關視覺素材（景點圖示、城市意象）
+4. 確認所有頁面 RWD 在手機、平板、桌機皆正常
+5. 最終部署至 Vercel 並確認正式網址可展示
+
+**Relevant Context**
+- 配色建議：海洋藍 `#0077B6`、珊瑚橘 `#F4845F`、淺沙白 `#FAF3E0`
+- 整合所有前面子任務的元件
+
+---
+
+## 架構總覽
+
+```
+/
+├── app/
+│   ├── page.tsx                  # 首頁（輸入表單）
+│   ├── itinerary/
+│   │   └── page.tsx              # 行程結果頁
+│   └── api/
+│       └── generate-itinerary/
+│           └── route.ts          # GPT API Route
+├── components/
+│   ├── form/                     # 表單元件
+│   └── itinerary/
+│       ├── DayCard.tsx
+│       ├── SpotCard.tsx
+│       └── TransitSegment.tsx
+├── data/
+│   └── mock-transit.ts           # Mock 交通時刻資料
+├── lib/
+│   └── maps.ts                   # Google Maps URL 工具函式
+└── .env.local                    # OPENAI_API_KEY
+```
