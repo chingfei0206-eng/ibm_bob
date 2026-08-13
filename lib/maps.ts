@@ -2,7 +2,9 @@
  * 建立 Google Maps 搜尋連結（單一景點）
  */
 export function buildGoogleMapsSearchUrl(destination: string): string {
-  const query = encodeURIComponent(destination);
+  // 若查詢詞尚未包含「高雄」，自動補上「高雄市」作為地理定位限制
+  const queryWithCity = destination.includes("高雄") ? destination : `高雄市 ${destination}`;
+  const query = encodeURIComponent(queryWithCity);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
